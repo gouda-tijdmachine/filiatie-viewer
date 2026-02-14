@@ -1,0 +1,433 @@
+/* zie https://www.goudatijdmachine.nl/over-ons/huisstijl-handboek/ */
+
+:root {
+	--gtm-blauw: #3891b1;
+	--gtm-rood: #d22c25;
+	--gtm-bruin: #533b3b;
+	--gtm-grijs: #ebebeb;
+	--gtm-zwart: #111111;
+	--gtm-wit: #ffffff;
+    --gtm-radius: 8px;
+}
+
+body {
+	font-family: Arial, sans-serif;
+	margin: 0;
+	padding: 0;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	min-height: 100vh;
+	background-color: var(--gtm-grijs);
+}
+
+#controls {
+	padding: 20px;
+	width: 700px;
+	text-align: center;
+}
+
+#controls.hidden {
+	display: none;
+}
+
+#kadGemeente {
+	width: 20%;
+}
+
+#kadPerceel {
+	width: 15%;
+}
+
+#kadPerceel, #kadGemeente {
+	font-size: 1.5em;
+	padding: 8px 16px;
+    text-align: center;
+	border-radius: var(--gtm-radius);
+    border:1px solid var(--gtm-blauw);
+}
+
+#loadGraph {
+	width: 50%;
+	padding: 8px 16px;
+	font-size: 1.5em;
+	background-color: var(--gtm-blauw);
+	color: white;
+	border: none;
+	border-radius: var(--gtm-radius);
+	cursor: pointer;
+	margin-top: .5em;
+}
+
+#examples a {
+	width: 100%;
+	padding: 8px 16px;
+	font-size: 1.5em;
+	background-color: var(--gtm-blauw);
+	opacity: 0.7;
+	color: white;
+	border: none;
+	border-radius: var(--gtm-radius);
+	cursor: pointer;
+	text-decoration: none;
+}
+
+#loadGraph:hover, #examples a:hover {
+	background-color: var(--gtm-rood);
+}
+
+#loadGraph:disabled {
+	background-color: #ccc;
+	cursor: not-allowed;
+}
+
+#graph {
+	display: none;
+	position: fixed;
+	top: 0;
+	left: 0;
+	width: 100vw;
+	height: 100vh;
+	background-color: var(--gtm-blauw);
+	overflow: hidden;
+}
+
+#graph.visible {
+	display: block;
+}
+
+#graph.loading {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+}
+
+#closeGraph {
+	display: none;
+	position: fixed;
+	top: 20px;
+	left: 20px;
+	width: 50px;
+	height: 50px;
+	background-color: var(--gtm-rood);
+	color: white;
+	border: none;
+	border-radius: 50%;
+	font-size: 24px;
+	cursor: pointer;
+	z-index: 1000;
+	align-items: center;
+	justify-content: center;
+	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+	transition: transform 0.2s ease;
+}
+
+#graph.visible~#closeGraph {
+	display: flex;
+}
+
+#closeGraph:hover {
+	transform: scale(1.1);
+	background-color: var(--gtm-bruin);
+}
+
+.loading-message {
+	font-size: 18px;
+	color: var(--gtm-blauw);
+    padding: 20px;
+    background-color:var(--gtm-grijs);
+    border: 2px solid var(--gtm-rood);
+    border-radius: var(--gtm-radius);
+}
+
+.error-message {
+	color: var(--gtm-rood);
+	padding: 20px;
+	border: 2px solid var(--gtm-rood);
+	border-radius: var(--gtm-radius);
+	background-color: var(--gtm-grijs);
+	margin: 20px;
+}
+
+.info-message {
+	color: #3498db;
+	padding: 20px;
+	border: 2px solid var(--gtm-blauw);
+	border-radius: var(--gtm-radius);
+	background-color: #d6eaf8;
+	margin: 20px;
+}
+
+#graph svg {
+	display: block;
+}
+
+.tooltip {
+	position: absolute;
+	padding: 8px;
+	background: rgba(0, 0, 0, 0.8);
+	color: white;
+	border-radius: 4px;
+	font-size: 12px;
+	pointer-events: none;
+	z-index: 1000;
+	display: none;
+}
+
+#examples {
+	margin: 0;
+	width: 100%;
+	display: flex;
+	column-gap: 1em;
+}
+
+#beeldmerkb {
+	position: absolute;
+	left: 1em;
+	bottom: 1em;
+	width: 4em;
+	display: none;
+}
+
+#beeldmerka {
+	display: inline;
+	width: 1.3em;
+}
+
+#controls p {
+	font-size: 1.3em;
+	text-wrap-style: balance;
+}
+
+#controls h1 {
+	color: var(--gtm-blauw);
+	font-size: 3.2em;
+	margin: 0;
+}
+
+#kaart_wrapper {
+	position: fixed;
+	top: 0;
+	right: -100vw;
+	width: 100vw;
+	height: 100vh;
+	background-color: white;
+	box-shadow: -2px 0 8px rgba(0, 0, 0, 0.3);
+	z-index: 900;
+	transition: right 0.3s ease-in-out;
+	display: flex;
+	z-index: 1000;
+}
+
+@media screen and (min-width: 768px) {
+	#kaart_wrapper {
+		right: -35vw;
+		width: 35vw;
+	}
+}
+
+.hiddenss {
+	display: none;
+}
+
+@media screen and (min-width: 768px) {
+	.hiddenss {
+		display: inline;
+	}
+}
+
+#kaart_wrapper.visible {
+	right: 0;
+}
+
+#kaart_wrapper .handle {
+	width: 1em;
+	height: 100%;
+	background-color: var(--gtm-rood);
+	cursor: pointer;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	color: white;
+	font-size: 24px;
+	user-select: none;
+}
+
+#kaart_wrapper .handle:hover {
+	background-color: var(--gtm-bruin);
+}
+
+#kaart {
+	flex: 1;
+	width: auto;
+	height: 100%;
+	border: none;
+}
+
+.divider {
+	display: flex;
+	align-items: center;
+	text-align: center;
+	color: var(--gtm-rood);
+	margin-top: 2em;
+}
+
+.divider::before, .divider::after {
+	content: '';
+	flex: 1;
+	border-bottom: 2px solid var(--gtm-rood);
+}
+
+.divider:not(:empty)::before {
+	margin-right: .5em;
+}
+
+.divider:not(:empty)::after {
+	margin-left: .5em;
+}
+
+#tekstueel {
+	display: block;
+	padding: 0 1em;
+	overflow: auto;
+}
+
+.tree {
+	--spacing: 1.5rem;
+	--radius: 7px;
+}
+
+.tree li {
+	display: block;
+	position: relative;
+	padding-left: calc(2 * var(--spacing) - var(--radius) - 2px);
+}
+
+ul.tree {
+	margin-left: -2.5em
+}
+
+.tree ul {
+	margin-left: calc(var(--radius) - var(--spacing));
+	padding-left: 0;
+}
+
+.tree ul li {
+	border-left: 2px solid var(--gtm-blauw);
+}
+
+.tree ul li:last-child {
+	border-color: transparent;
+}
+
+.tree ul li::before {
+	content: '';
+	display: block;
+	position: absolute;
+	top: calc(var(--spacing) / -2);
+	left: -2px;
+	width: calc(var(--spacing) + 2px);
+	height: calc(var(--spacing) + 1px);
+	border: solid var(--gtm-blauw);
+	border-width: 0 0 2px 2px;
+}
+
+.tree summary {
+	display: block;
+	cursor: pointer;
+}
+
+.tree summary::marker,
+.tree summary::-webkit-details-marker {
+	display: none;
+}
+
+.tree summary:focus {
+	outline: none;
+}
+
+.tree li::after,
+.tree summary::before {
+	content: '';
+	display: block;
+	position: absolute;
+	top: calc(var(--spacing) / 2 - var(--radius));
+	left: calc(var(--spacing) - var(--radius) - 1px);
+	width: calc(2 * var(--radius));
+	height: calc(2 * var(--radius));
+	border-radius: 50%;
+	background: var(--gtm-blauw);
+}
+
+#toonTekstboom {
+	display: none;
+	position: fixed;
+	top: 100px;
+	left: 20px;
+	width: 50px;
+	height: 50px;
+	background-color: var(--gtm-wit);
+	color: var(--gtm-blauw);
+	border: none;
+	border-radius: 50%;
+	font-size: 24px;
+	cursor: pointer;
+	z-index: 1000;
+	align-items: center;
+	justify-content: center;
+	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+	transition: transform 0.2s ease;
+}
+
+#graph.visible~#toonTekstboom {
+	display: flex;
+}
+
+#toonTekstboom:hover {
+	transform: scale(1.1);
+	background-color: var(--gtm-bruin);
+}
+
+#tekstueel_wrapper {
+	position: fixed;
+	top: 0;
+	right: -100vw;
+	width: 100vw;
+	height: 100vh;
+	background-color: white;
+	box-shadow: -2px 0 8px rgba(0, 0, 0, 0.3);
+	z-index: 900;
+	transition: right 0.3s ease-in-out;
+	display: flex;
+	z-index: 1000;
+}
+
+@media screen and (min-width: 768px) {
+	#tekstueel_wrapper {
+		right: -45vw;
+		width: 45vw;
+	}
+}
+
+#tekstueel_wrapper.visible {
+	right: 0;
+}
+
+#tekstueel_wrapper .handle {
+	width: 1em;
+	height: 100%;
+	background-color: var(--gtm-rood);
+	cursor: pointer;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	color: white;
+	font-size: 24px;
+	/*    writing-mode: vertical-rl;
+    text-orientation: mixed;*/
+	user-select: none;
+}
+
+#tekstueel_wrapper .handle:hover {
+	background-color: var(--gtm-bruin);
+}

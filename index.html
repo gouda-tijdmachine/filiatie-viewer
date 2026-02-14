@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="nl-NL">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Filiatie viewer &raquo; Gouda Tijdmachine</title>
+    <meta name='robots' content='index, follow' />
+    <meta property="og:title" content="Filiatie viewer" />
+    <meta property="og:description"
+        content="Filiatie is in het kadaster het proces waarbij de geschiedenis en onderlinge relatie van percelen wordt vastgelegd wanneer grond wordt gesplitst of juist samengevoegd. Deze filitatie viewer toont de geschiedenis van de Goudse percelen." />
+    <meta property="og:url" content="https://www.goudatijdmachine.nl/filiatie-viewer/" />
+    <meta property="og:site_name" content="Gouda Tijdmachine" />
+    <link rel="icon" href="assets/img/gtm-logo-2025-100x100.png" sizes="32x32" />
+    <link rel="icon" href="assets/img/gtm-logo-2025-300x300.png" sizes="192x192" />
+    <link rel="apple-touch-icon" href="assets/img/gtm-logo-2025-300x300.png" />
+    <meta name="msapplication-TileImage" content="assets/img/gtm-logo-2025-300x300.png" />
+    <link href="assets/css/leaflet-1.8.0.css" rel="stylesheet">
+    <link href="assets/css/Control.FullScreen.css" rel="stylesheet">
+    <link rel="stylesheet" href="assets/css/style.css?v=7">
+</head>
+
+<body>
+    <div id="controls">
+        <h1>Gouda Filiatie Viewer <a href="https://www.goudatijdmachine.nl/"><img id="beeldmerka"
+                    src="assets/img/gtm-logo-2025.svg"></a></h1>
+        <p>Filiatie is in het kadaster het proces waarbij de geschiedenis en onderlinge relatie van percelen wordt
+            vastgelegd wanneer grond wordt gesplitst of juist samengevoegd. Als één perceel wordt verdeeld in meerdere
+            nieuwe percelen, of meerdere percelen samen één nieuw perceel vormen, ontstaat er een administratieve
+            “afstamming”: de nieuwe percelen krijgen een verwijzing naar het oorspronkelijke perceel (of andersom),
+            zodat altijd te herleiden is hoe de perceelsstructuur door de tijd heen is veranderd.</p>
+
+            <select id="kadGemeente" title="Kadastrale gemeente"><option>GDA01</option><option>MDT02</option><option>RKW02</option></select>
+            <input id="kadPerceel" title="Kadastraal perceelnummer" value="C2350">&nbsp;&nbsp;<button id="loadGraph">Toon <span class="hiddenss">de 3D </span>graaf</button>
+
+        <h2 class="divider">Voorbeelden</h2>
+            <div id="examples">
+            <a
+                href="https://www.goudatijdmachine.nl/filiatie-viewer/#https%3A%2F%2Fwww.goudatijdmachine.nl%2Fid%2Fperceel%2FGDA01%2FD839"><span class="hiddenss">GDA01-</span>D839</a>
+            <a
+                href="https://www.goudatijdmachine.nl/filiatie-viewer/#https%3A%2F%2Fwww.goudatijdmachine.nl%2Fid%2Fperceel%2FGDA01%2FD91"><span class="hiddenss">GDA01-</span>D91</a>
+            <a
+                href="https://www.goudatijdmachine.nl/filiatie-viewer/#https%3A%2F%2Fwww.goudatijdmachine.nl%2Fid%2Fperceel%2FGDA01%2FN1452"><span class="hiddenss">GDA01-</span>N1452</a>
+                </div>
+    </div>
+
+    <div id="graph">
+    </div>
+    <button id="closeGraph" title="Sluiten">✕</button>
+    <button id="toonTekstboom" title="Toon tekstboom"><img src="assets/img/tekst.svg" width="32"></button>
+    <div class="tooltip"></div>
+
+    <img id="beeldmerkb" src="assets/img/gtm-logo-2025-b.svg">
+
+    <div id="kaart_wrapper">
+        <div class="handle">❱</div>
+        <div id="kaart"></div>
+    </div>
+
+    <div id="tekstueel_wrapper">
+        <div class="handle">❱</div>
+        <div id="tekstueel">
+            <div id="opgegaanIn-tekstueel">
+                <h4>Percelen waarin <span id="start-opgegaanIn"></span> is opgegaan</h4>
+                <div class="tree-container">
+                    <ul id="opgegaanin-root" class="tree"></ul>
+                </div>
+            </div>
+            <div id="voortgekomenUit-tekstueel">
+                <h4>Percelen waaruit <span id="start-voortgekomenUit"></span> is voortgekomen</h4>
+                <div class="tree-container">
+                    <ul id="voortgekomen-root" class="tree"></ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="assets/js/three@0.159.0.min.js"></script>
+    <script src="assets/js/three-spritetext@1.8.2.min.js"></script>
+    <script src="assets/js/3d-force-graph@1.73.3.min.js"></script>
+    <script src="assets/js/leaflet@1.8.0.min.js"></script>
+    <script src="assets/js/wicket.js"></script>
+    <script src="assets/js/Control.FullScreen.js"></script>
+    <script src="assets/js/main.js?v=8"></script>
+</body>
+
+</html>
