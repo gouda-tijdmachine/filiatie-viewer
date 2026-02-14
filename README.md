@@ -1,2 +1,3 @@
-# filiatie-viewer
-Toont de "afstamming" van Goudse percelen.
+# [Gouda Filiatie Viewer](https://www.goudatijdmachine.nl/filiatie-viewer/)
+Toont de filiaties in een 3D graaf en een hierarchische tekst versie. Van een deel van de percelen is via de OAT en de BRK een geometrie beschikbaar die op de kaart wordt weergegeven. De "afstamming" van Goudse percelen is gebaseerd op de [Gouda perceel filiaties als linked data](https://yasgui.coret.org/#query=SELECT+%3Fclass+(COUNT(%3Fs)+AS+%3Fcount)%0AWHERE+%7B%0A++%3Fs+a+%3Fclass+.%0A%7D%0AGROUP+BY+%3Fclass%0AORDER+BY+DESC(%3Fcount)&contentTypeConstruct=text%2Fturtle&contentTypeSelect=application%2Fsparql-results%2Bjson&endpoint=https%3A%2F%2Fqlever.coret.org%2Fhackalod-filiatie&requestMethod=POST&tabTitle=hackalod-filiatie&headers=%7B%7D&outputFormat=table) (beschikbaar gekomen tijdens Hackalod 2023) en de [knowledge graph van de Gouda Tijdmachine](https://sparql.goudatijdmachine.nl/).
+
