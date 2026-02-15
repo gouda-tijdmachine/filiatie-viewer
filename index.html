@@ -17,7 +17,7 @@
     <meta name="msapplication-TileImage" content="assets/img/gtm-logo-2025-300x300.png" />
     <link href="assets/css/leaflet-1.8.0.css" rel="stylesheet">
     <link href="assets/css/Control.FullScreen.css" rel="stylesheet">
-    <link rel="stylesheet" href="assets/css/style.css?v=7">
+    <link rel="stylesheet" href="assets/css/style.css?v=8">
 </head>
 
 <body>
@@ -30,18 +30,19 @@
             “afstamming”: de nieuwe percelen krijgen een verwijzing naar het oorspronkelijke perceel (of andersom),
             zodat altijd te herleiden is hoe de perceelsstructuur door de tijd heen is veranderd.</p>
 
-            <select id="kadGemeente" title="Kadastrale gemeente"><option>GDA01</option><option>MDT02</option><option>RKW02</option></select>
-            <input id="kadPerceel" title="Kadastraal perceelnummer" value="C2350">&nbsp;&nbsp;<button id="loadGraph">Toon <span class="hiddenss">de 3D </span>graaf</button>
-
-        <h2 class="divider">Voorbeelden</h2>
-            <div id="examples">
-            <a
-                href="https://www.goudatijdmachine.nl/filiatie-viewer/#https%3A%2F%2Fwww.goudatijdmachine.nl%2Fid%2Fperceel%2FGDA01%2FD839"><span class="hiddenss">GDA01-</span>D839</a>
-            <a
-                href="https://www.goudatijdmachine.nl/filiatie-viewer/#https%3A%2F%2Fwww.goudatijdmachine.nl%2Fid%2Fperceel%2FGDA01%2FD91"><span class="hiddenss">GDA01-</span>D91</a>
-            <a
-                href="https://www.goudatijdmachine.nl/filiatie-viewer/#https%3A%2F%2Fwww.goudatijdmachine.nl%2Fid%2Fperceel%2FGDA01%2FN1452"><span class="hiddenss">GDA01-</span>N1452</a>
-                </div>
+        <select id="kadGemeente" title="Kadastrale gemeente">
+            <option>GDA01</option>
+            <option>MDT02</option>
+            <option>RKW02</option>
+        </select>
+        <input id="kadPerceel" list="percelen" title="Kadastraal perceelnummer" value="">&nbsp;&nbsp;<button
+            id="loadGraph">Toon <span class="hiddenss">de 3D </span>graaf</button>
+        <datalist id="percelen">
+            <option value="C2350"></option>
+            <option value="D839"></option>
+            <option value="D91"></option>
+            <option value="N1452"></option>
+        </datalist>
     </div>
 
     <div id="graph">
