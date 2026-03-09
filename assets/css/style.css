@@ -21,8 +21,12 @@ body {
     background-color: var(--gtm-grijs);
 }
 
+p {
+    line-height: 1.5;
+}
+
 #controls {
-    padding: 20px;
+    padding: 0 20px 20px 20px;
     width: 700px;
     text-align: center;
 }
@@ -31,38 +35,40 @@ body {
     display: none;
 }
 
-#kadGemeente {
+#kadPerceel {
     width: 20%;
 }
 
 #kadPerceel {
-    width: 15%;
-}
-
-#kadPerceel,
-#kadGemeente {
     font-size: 1.5em;
-    padding: 8px 16px;
+    padding: 8px;
     text-align: center;
     border-radius: var(--gtm-radius);
     border: 1px solid var(--gtm-blauw);
 }
 
+
 #loadGraph {
-    width: 50%;
+    width: 40%;
     padding: 8px 16px;
     font-size: 1.5em;
+    margin-top: .5em;
+}
+
+#loadGraph,
+#toonUitleg {
     background-color: var(--gtm-blauw);
     color: white;
     border: none;
     border-radius: var(--gtm-radius);
     cursor: pointer;
-    margin-top: .5em;
 }
 
 
-#loadGraph:hover {
-    background-color: var(--gtm-rood);
+#loadGraph:hover,
+#toonUitleg:hover,
+#voorbeelden a:hover {
+    background-color: var(--gtm-bruin);
 }
 
 #loadGraph:disabled {
@@ -348,6 +354,49 @@ ul.tree {
     background-color: var(--gtm-bruin);
 }
 
+#toonAlleKaarten {
+    display: none;
+    position: fixed;
+    top: 170px;
+    left: 20px;
+    width: 50px;
+    height: 50px;
+    background-color: var(--gtm-wit);
+    color: var(--gtm-blauw);
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    transition: transform 0.2s ease, background-color 0.2s ease;
+}
+
+#graph.visible~#toonAlleKaarten {
+    display: flex;
+}
+
+#toonAlleKaarten:hover:not(:disabled) {
+    transform: scale(1.1);
+    background-color: var(--gtm-bruin);
+}
+
+#toonAlleKaarten:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.perceel-tooltip {
+    background-color: rgba(0, 0, 0, 0.8);
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 4px 8px;
+    font-size: 12px;
+    font-weight: bold;
+}
+
 #tekstueel_wrapper {
     position: fixed;
     top: 0;
@@ -390,4 +439,125 @@ ul.tree {
 
 #tekstueel_wrapper .handle:hover {
     background-color: var(--gtm-bruin);
+}
+
+.leaflet-container .leaflet-control-attribution {
+    font-size: 1.3vw !important;
+    background: #fff !important;
+}
+
+#uitleg {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: var(--gtm-grijs);
+    overflow: auto;
+    z-index: 2000;
+    padding: 10px 30px 10px 80px;
+    box-sizing: border-box;
+}
+
+#uitleg img {
+    max-width: 100%;
+}
+
+#uitleg a {
+    color: var(--gtm-zwart);
+}
+
+#uitleg.visible {
+    display: block;
+}
+
+#closeUitleg {
+    display: none;
+    position: fixed;
+    top: 20px;
+    left: 20px;
+    width: 50px;
+    height: 50px;
+    background-color: var(--gtm-rood);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    font-size: 24px;
+    cursor: pointer;
+    z-index: 2001;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    transition: transform 0.2s ease;
+}
+
+#uitleg.visible #closeUitleg {
+    display: flex;
+}
+
+#closeUitleg:hover {
+    transform: scale(1.1);
+    background-color: var(--gtm-bruin);
+}
+
+#voorbeelden {
+
+
+    a {
+        display: inline-block;
+        background-color: var(--gtm-blauw);
+        color: white;
+        border: none;
+        border-radius: var(--gtm-radius);
+        cursor: pointer;
+        padding: 8px 16px;
+        font-size: 1.1em;
+        text-decoration: none;
+        margin: 1em 0.4em;
+        width: 3em;
+    }
+}
+
+#toonUitleg {
+    margin-left: 2em;
+    padding: 8px 16px;
+    font-size: 1.1em;
+}
+
+#locate-button {
+    vertical-align: bottom;
+    width: 45px;
+    padding: 0 .8em;
+    cursor: pointer;
+    transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+#locate-button.locating {
+    opacity: 0.7;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+#actie {
+    background-color: var(--gtm-wit);
+    padding: 2.5em 0 3em;
+    margin: 2em 0 1em 0;
+    box-shadow: 0 0 5px var(--gtm-blauw);
+    border-radius: var(--gtm-radius);
+}
+
+p#disclaimer {
+    font-weight: 100;
+    color: var(--gtm-rood);
+    font-size: 1em;
 }

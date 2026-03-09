@@ -2,16 +2,39 @@ const SPARQLendpointA = "https://qlever.coret.org/hackalod-filiatie";
 const SPARQLendpointB = "https://sparql.goudatijdmachine.nl";
 
 const MAXZOOM = 24;
-const huc_knaw_hisgis = L.tileLayer('https://tileserver.huc.knaw.nl/{z}/{x}/{y}', { minZoom: 10, maxZoom: 21, attribution: 'KNAW/HUC' });
-const pdok_percelen_BRK = L.tileLayer.wms('https://service.pdok.nl/kadaster/cp/wms/v1_0?', { layers: 'CP.CadastralParcel', transparent: true, version: "1.3.0", maxZoom: MAXZOOM, format: "image/png", attribution: "<a href='https://www.pdok.nl/'>PDOK</a>" });
+const huc_knaw_hisgis = L.tileLayer('https://tileserver.huc.knaw.nl/{z}/{x}/{y}', { minZoom: 10, maxZoom: 21, attribution: 'HISGIS Minuutplans 1830 (KNAW/HUC)' });
+const pdok_percelen_BRK = L.tileLayer.wms('https://service.pdok.nl/kadaster/cp/wms/v1_0?', { layers: 'CP.CadastralParcel', transparent: true, version: "1.3.0", maxZoom: MAXZOOM, format: "image/png", attribution: "Basis Registratie Kadaster (<a href='https://www.pdok.nl/'>PDOK</a>)" });
+const boxlb = L.tileLayer('https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token={token}', { maxZoom: 21, attribution: '&copy; <a href="https://www.mapbox.com/feedback/">Mapbox</a>', id: 'goudatijdmachine/cmjeyi1ep004d01sde7qh8cac', token: 'pk.eyJ1IjoiZ291ZGF0aWpkbWFjaGluZSIsImEiOiJja3Q2N2Fqb24wZm9sMm9wZThzMW1tYzF1In0.F9nmw4f4wDkIJnsbVqmzJQ' });
 
 // Cache DOM elements
 let cachedElements = {};
+
+// WKT geometry cache
+const wktCache = new Map(); // Key: perceelLabel (e.g., "GDA01/C2350"), Value: { wkt: string, hasGeo: "BRK"|"OAT", status: "success"|"error" }
+let currentGraphNodes = []; // Store nodes with geometry after graph creation
 
 // Regex patterns (compiled once for performance)
 const URI_TRIPLE_PATTERN = /<([^>]+)>\s+<([^>]+)>\s+<([^>]+)>\s*\./;
 const LITERAL_TRIPLE_PATTERN = /<([^>]+)>\s+<([^>]+)>\s+"([^"]+)"\s*\./;
 const PERCEEL_LABEL_PATTERN = /perceel\/([^/]+\/[^/]+)$/;
+
+function strSPARQLc(lng, lat) {
+    return `PREFIX sdo: <https://schema.org/>
+PREFIX gtm: <https://www.goudatijdmachine.nl/def#>
+PREFIX geo: <http://www.opengis.net/ont/geosparql#>
+PREFIX geof: <http://www.opengis.net/def/function/geosparql/>
+
+SELECT ?naam WHERE {
+  ?perceel a gtm:Perceel ;
+           gtm:kadastraleAanduiding ?naam ;
+           geo:hasGeometry/geo:asWKT ?wkt .
+  BIND("POINT(${lng} ${lat})"^^geo:wktLiteral AS ?locate)
+  BIND(geof:distance(?wkt, ?locate) AS ?dist)
+  FILTER(?dist < 0.001)
+}
+ORDER BY ?dist
+LIMIT 1`;
+}
 
 function strSPARQLb(perceelID) {
     return `PREFIX sdo: <https://schema.org/>
@@ -294,11 +317,83 @@ function displayInfo(message) {
     `;
 }
 
+async function getPerceelLatLong(lng, lat) {
+
+    const query = strSPARQLc(lng, lat);
+    console.log(query);
+    const response = await executeSPARQL(query, SPARQLendpointB);
+    const data = JSON.parse(response);
+
+    let perceelLabel = "Onbekend";
+    if (data.results.bindings[0]) {
+        perceelLabel = data.results.bindings[0].naam.value;
+    }
+    const kadPerceelInput = document.getElementById('kadPerceel');
+    kadPerceelInput.value = perceelLabel;
+    // Trigger input event to activate validation
+    kadPerceelInput.dispatchEvent(new Event('input'));
+}
+
+
+/**
+ * Prefetch WKT geometries for all BRK and OAT nodes in the current graph
+ * Populates the wktCache Map for use by showMap() and showAllGeometries()
+ */
+async function prefetchAllGeometries() {
+    console.log(`Starting prefetch for ${currentGraphNodes.length} nodes with geometry...`);
+
+    // Disable the show all button while loading
+    if (cachedElements.toonAlleKaarten) {
+        cachedElements.toonAlleKaarten.disabled = true;
+    }
+
+    const fetchPromises = currentGraphNodes.map(async (node) => {
+        const perceelLabel = node.label; // e.g., "GDA01/C2350"
+
+        try {
+            const query = strSPARQLb(`https://www.goudatijdmachine.nl/id/perceel/${perceelLabel}`);
+            const response = await executeSPARQL(query, SPARQLendpointB);
+            const data = JSON.parse(response);
+
+            if (data.results.bindings[0]) {
+                const wktValue = data.results.bindings[0].wkt.value;
+                wktCache.set(perceelLabel, {
+                    wkt: wktValue,
+                    hasGeo: node.hasGeo,
+                    status: 'success'
+                });
+            } else {
+                wktCache.set(perceelLabel, {
+                    wkt: null,
+                    hasGeo: node.hasGeo,
+                    status: 'error'
+                });
+            }
+        } catch (error) {
+            console.error(`Failed to fetch geometry for ${perceelLabel}:`, error);
+            wktCache.set(perceelLabel, {
+                wkt: null,
+                hasGeo: node.hasGeo,
+                status: 'error'
+            });
+        }
+    });
+
+    await Promise.allSettled(fetchPromises);
+
+    const successCount = Array.from(wktCache.values()).filter(v => v.status === 'success').length;
+    console.log(`Prefetch complete: ${successCount}/${currentGraphNodes.length} geometries loaded`);
+
+    // Enable the show all button after loading
+    if (cachedElements.toonAlleKaarten) {
+        cachedElements.toonAlleKaarten.disabled = false;
+    }
+}
+
 // Main orchestration function
 async function loadAndVisualizeGraph() {
-    const kadGemeente = cachedElements.kadGemeente.value;
     const kadPerceel = cachedElements.kadPerceel.value;
-    const perceelInput = `https://www.goudatijdmachine.nl/id/perceel/${kadGemeente}/${kadPerceel}`;
+    const perceelInput = `https://www.goudatijdmachine.nl/id/perceel/GDA01/${kadPerceel}`;
 
     // Get perceelID from URL hash or input field
     let perceelID = getPerceelFromHash() || perceelInput;
@@ -353,8 +448,12 @@ async function loadAndVisualizeGraph() {
         // Create 3D force-directed graph
         create3DGraph('graph', classifiedNodes, links);
 
+        // Store nodes with geometry for prefetching and "show all" feature
+        currentGraphNodes = classifiedNodes.filter(node => node.hasGeo);
+
         // Display statistics
         console.log(`3D Graph loaded: ${nodes.length} nodes, ${links.length} edges`);
+        console.log(`Found ${currentGraphNodes.length} nodes with geometry (BRK/OAT)`);
 
     } catch (error) {
         console.error('Error loading graph:', error);
@@ -368,6 +467,11 @@ async function loadAndVisualizeGraph() {
         cachedElements.loadButton.disabled = false;
 
         toonFiliatie(perceelID);
+
+        // Prefetch geometries in background (don't await - happens async)
+        if (currentGraphNodes.length > 0) {
+            prefetchAllGeometries();
+        }
     }
 }
 
@@ -375,7 +479,6 @@ async function loadAndVisualizeGraph() {
 document.addEventListener('DOMContentLoaded', () => {
     // Cache DOM elements for better performance
     cachedElements = {
-        kadGemeente: document.getElementById('kadGemeente'),
         kadPerceel: document.getElementById('kadPerceel'),
         loadButton: document.getElementById('loadGraph'),
         graphDiv: document.getElementById('graph'),
@@ -384,10 +487,25 @@ document.addEventListener('DOMContentLoaded', () => {
         closeButton: document.getElementById('closeGraph'),
         kaartWrapper: document.getElementById('kaart_wrapper'),
         tekstueelWrapper: document.getElementById('tekstueel_wrapper'),
-        toonTekstboom: document.getElementById('toonTekstboom')
+        toonTekstboom: document.getElementById('toonTekstboom'),
+        toonAlleKaarten: document.getElementById('toonAlleKaarten'),
+        locateButton: document.getElementById('locate-button')
     };
 
     cachedElements.loadButton.addEventListener('click', loadAndVisualizeGraph);
+
+    // Input validation for kadPerceel - enable button only if valid
+    const perceelPattern = /[A-Z][0-9]+/;
+    cachedElements.kadPerceel.addEventListener('input', () => {
+        const value = cachedElements.kadPerceel.value.trim();
+        cachedElements.loadButton.disabled = !perceelPattern.test(value);
+    });
+
+    // Check initial value on page load
+    const initialValue = cachedElements.kadPerceel.value.trim();
+    if (perceelPattern.test(initialValue)) {
+        cachedElements.loadButton.disabled = false;
+    }
 
     // Auto-load graph if URL has a hash
     if (window.location.hash) {
@@ -398,6 +516,40 @@ document.addEventListener('DOMContentLoaded', () => {
     window.addEventListener('hashchange', () => {
         if (window.location.hash) {
             loadAndVisualizeGraph();
+        }
+    });
+
+    // Handle locate button click
+    cachedElements.locateButton.addEventListener('click', function () {
+        if ('geolocation' in navigator) {
+            // Add spinning class
+            cachedElements.locateButton.classList.add('locating');
+
+            // Options for faster geolocation on mobile
+            const options = {
+                enableHighAccuracy: false,  // Use network/WiFi instead of GPS for faster results
+                timeout: 10000,              // 10 second timeout
+                maximumAge: 30000            // Accept cached position up to 30 seconds old
+            };
+
+            navigator.geolocation.getCurrentPosition(function (position) {
+                const lat = position.coords.latitude;
+                const lng = position.coords.longitude;
+
+                console.log('Current location:', {
+                    latitude: lat,
+                    longitude: lng,
+                    accuracy: position.coords.accuracy
+                });
+                getPerceelLatLong(lng, lat);
+                cachedElements.locateButton.classList.remove('locating');
+            }, function (error) {
+                console.error('Error getting location:', error.message);
+                // Remove spinning class on error
+                cachedElements.locateButton.classList.remove('locating');
+            }, options);
+        } else {
+            console.error('Geolocation is not supported by this browser.');
         }
     });
 
@@ -417,6 +569,11 @@ document.addEventListener('DOMContentLoaded', () => {
         while (cachedElements.graphDiv.childNodes.length > 1) {
             cachedElements.graphDiv.removeChild(cachedElements.graphDiv.lastChild);
         }
+
+        // Clear WKT cache and node references
+        wktCache.clear();
+        currentGraphNodes = [];
+        console.log('WKT cache cleared');
 
         // Remove hash from URL
         history.pushState('', document.title, window.location.pathname + window.location.search);
@@ -443,6 +600,11 @@ document.addEventListener('DOMContentLoaded', () => {
         // Open text tree wrapper
         cachedElements.tekstueelWrapper.classList.add('visible');
     });
+
+    // Show all geometries button handler
+    cachedElements.toonAlleKaarten.addEventListener('click', () => {
+        showAllGeometries();
+    });
 });
 
 let map_oat;
@@ -451,16 +613,26 @@ let currentGeoJsonLayer;
 
 async function showMap(perceelID, type) {
     try {
-        const query = strSPARQLb(perceelID);
-        const response = await executeSPARQL(query, SPARQLendpointB);
-        const data = JSON.parse(response);
+        let value;
+        const perceelLabel = extractLabel(perceelID);
 
-        if (!data.results.bindings[0]) {
-            console.error('No geometry data found for perceel:', perceelID);
-            return;
+        // Check cache first for better performance
+        if (wktCache.has(perceelLabel) && wktCache.get(perceelLabel).status === 'success') {
+            value = wktCache.get(perceelLabel).wkt;
+            console.log(`Using cached geometry for ${perceelLabel}`);
+        } else {
+            // Fallback: fetch from SPARQL if not in cache
+            const query = strSPARQLb(perceelLabel);
+            const response = await executeSPARQL(query, SPARQLendpointB);
+            const data = JSON.parse(response);
+
+            if (!data.results.bindings[0]) {
+                console.error('No geometry data found for perceel:', perceelLabel);
+                return;
+            }
+
+            value = data.results.bindings[0].wkt.value;
         }
-
-        const value = data.results.bindings[0].wkt.value;
         const wkt = new Wkt.Wkt();
 
         let feature;
@@ -521,6 +693,114 @@ async function showMap(perceelID, type) {
     }
 }
 
+/**
+ * Display all cached geometries on a single map with boxlb tiles
+ * Colors: Gold (#FFD700) for BRK, Orange (#e17000) for OAT
+ * Interactive labels on mouseover
+ */
+async function showAllGeometries() {
+    try {
+        // Close text tree if open
+        if (cachedElements.tekstueelWrapper.classList.contains('visible')) {
+            cachedElements.tekstueelWrapper.classList.remove('visible');
+        }
+
+        // Remove existing maps to prevent memory leaks
+        if (map_oat) {
+            map_oat.remove();
+            map_oat = null;
+        }
+        if (brk_oat) {
+            brk_oat.remove();
+            brk_oat = null;
+        }
+
+        // Create new map with boxlb tiles
+        const mapConfig = {
+            fullscreenControl: true,
+            fullscreenControlOptions: { position: 'topleft' }
+        };
+
+        const allGeoMap = L.map('kaart', mapConfig).setView([52.01, 4.71], 13);
+        boxlb.addTo(allGeoMap);
+
+        // Build feature collection from cache
+        const allFeatures = [];
+        const wkt = new Wkt.Wkt();
+
+        for (const [perceelLabel, cacheEntry] of wktCache.entries()) {
+            if (cacheEntry.status !== 'success' || !cacheEntry.wkt) {
+                continue; // Skip failed entries
+            }
+
+            try {
+                wkt.read(cacheEntry.wkt);
+                const geoJson = wkt.toJson();
+
+                allFeatures.push({
+                    type: "Feature",
+                    geometry: geoJson,
+                    properties: {
+                        label: perceelLabel,
+                        hasGeo: cacheEntry.hasGeo
+                    }
+                });
+            } catch (e) {
+                console.error(`Error parsing WKT for ${perceelLabel}:`, e);
+            }
+        }
+
+        if (allFeatures.length === 0) {
+            console.warn('No valid geometries to display');
+            return;
+        }
+
+        // Create GeoJSON layer with color coding and interactivity
+        const geoJsonLayer = L.geoJSON(allFeatures, {
+            style: (feature) => {
+                const color = feature.properties.hasGeo === "BRK" ? '#FFD700' : '#e17000';
+                return {
+                    color: color,
+                    fillColor: color,
+                    fillOpacity: 0.4,
+                    weight: 2
+                };
+            },
+            onEachFeature: (feature, layer) => {
+                // Mouseover tooltip with perceel label
+                layer.bindTooltip(feature.properties.label, {
+                    permanent: false,
+                    direction: 'top',
+                    className: 'perceel-tooltip'
+                });
+
+                // Click to zoom to individual feature
+                layer.on('click', () => {
+                    allGeoMap.fitBounds(layer.getBounds(), { maxZoom: 19 });
+                });
+            }
+        });
+
+        geoJsonLayer.addTo(allGeoMap);
+
+        // Fit map bounds to show all geometries
+        allGeoMap.fitBounds(geoJsonLayer.getBounds(), {
+            padding: [20, 20],
+            maxZoom: 19
+        });
+
+        // Store map reference for cleanup
+        map_oat = allGeoMap;
+
+        // Slide in the map wrapper
+        cachedElements.kaartWrapper.classList.add('visible');
+
+        console.log(`Displayed ${allFeatures.length} parcels on map`);
+
+    } catch (error) {
+        console.error('Error showing all geometries:', error);
+    }
+}
 
 async function bouwBoom(startUri, richting, root) {
     try {
@@ -571,7 +851,7 @@ async function bouwBoom(startUri, richting, root) {
     }
 }
 
-function perceelDeel(uri){
+function perceelDeel(uri) {
     const parts = uri.split('/');
     return parts.slice(-2).join('-');
 }
