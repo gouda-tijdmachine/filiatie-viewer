@@ -19,7 +19,7 @@ const LITERAL_TRIPLE_PATTERN = /<([^>]+)>\s+<([^>]+)>\s+"([^"]+)"\s*\./;
 const PERCEEL_LABEL_PATTERN = /perceel\/([^/]+\/[^/]+)$/;
 
 function strSPARQLc(lng, lat) {
-    return `PREFIX sdo: <https://schema.org/>
+    return `PREFIX schema: <http://schema.org/>
 PREFIX gtm: <https://www.goudatijdmachine.nl/def#>
 PREFIX geo: <http://www.opengis.net/ont/geosparql#>
 PREFIX geof: <http://www.opengis.net/def/function/geosparql/>
@@ -37,13 +37,13 @@ LIMIT 1`;
 }
 
 function strSPARQLb(perceelID) {
-    return `PREFIX sdo: <https://schema.org/>
+    return `PREFIX schema: <http://schema.org/>
 PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
 PREFIX geo: <http://www.opengis.net/ont/geosparql#>
 
 SELECT ?wkt
 WHERE {
-  ?sub <https://schema.org/identifier> "${perceelID}"^^xsd:string ;
+  ?sub schema:identifier "${perceelID}"^^xsd:string ;
        geo:hasGeometry/geo:asWKT ?wkt .
 }`;
 }
