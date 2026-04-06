@@ -19,7 +19,7 @@ const LITERAL_TRIPLE_PATTERN = /<([^>]+)>\s+<([^>]+)>\s+"([^"]+)"\s*\./;
 const PERCEEL_LABEL_PATTERN = /perceel\/([^/]+\/[^/]+)$/;
 
 function strSPARQLc(lng, lat) {
-    return `PREFIX schema: <http://schema.org/>
+    return `PREFIX schema: <https://schema.org/>
 PREFIX gtm: <https://www.goudatijdmachine.nl/def#>
 PREFIX geo: <http://www.opengis.net/ont/geosparql#>
 PREFIX geof: <http://www.opengis.net/def/function/geosparql/>
